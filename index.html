@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💪 健身记录</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0f0f13;--card:#1a1a24;--card2:#22222f;
+    --accent:#6c5ce7;--accent2:#a29bfe;--green:#00b894;
+    --text:#e8e8ef;--text2:#8888a0;--danger:#ff6b6b;
+    --radius:16px;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:100px}
+  .container{max-width:520px;margin:0 auto}
+
+  /* Auth */
+  .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:80vh}
+  .auth-card{background:var(--card);border-radius:var(--radius);padding:32px 28px;width:100%;max-width:380px;border:1px solid rgba(255,255,255,.04)}
+  .auth-card h2{text-align:center;margin-bottom:24px;font-size:22px}
+  .auth-card h2 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .auth-card .form-group{margin-bottom:14px}
+  .auth-card label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
+  .auth-card input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:var(--card2);color:var(--text);font-size:14px;outline:none;transition:.2s}
+  .auth-card input:focus{border-color:var(--accent)}
+  .btn-primary{width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;background:linear-gradient(135deg,var(--accent),#8b7cf7);color:#fff;margin-top:6px}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(108,92,231,.35)}
+  .auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--text2)}
+  .auth-switch a{color:var(--accent2);cursor:pointer;text-decoration:none}
+  .auth-switch a:hover{text-decoration:underline}
+  .auth-error{background:rgba(255,107,107,.1);color:var(--danger);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none}
+
+  /* Header */
+  .header{text-align:center;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center}
+  .header-left h1{font-size:24px;font-weight:800}
+  .header-left h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .header-right{display:flex;gap:8px;align-items:center}
+  .header-right .nickname{font-size:13px;color:var(--accent2);font-weight:600}
+  .btn-icon{background:var(--card);border:1px solid rgba(255,255,255,.06);color:var(--text2);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.2s}
+  .btn-icon:hover{border-color:var(--accent);color:var(--accent2)}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+  .stat-card{background:var(--card);border-radius:var(--radius);padding:16px;text-align:center;border:1px solid rgba(255,255,255,.04)}
+  .stat-card .num{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .stat-card .label{font-size:12px;color:var(--text2);margin-top:4px}
+
+  /* Tabs */
+  .tabs{display:flex;gap:8px;margin-bottom:20px}
+  .tab{flex:1;padding:10px;border-radius:12px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;background:var(--card);color:var(--text2)}
+  .tab.active{background:var(--accent);color:#fff}
+
+  /* Form */
+  .form-card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:20px;border:1px solid rgba(255,255,255,.04);display:none}
+  .form-card.show{display:block}
+  .form-row{display:flex;gap:10px;margin-bottom:12px}
+  .form-group{flex:1}
+  .form-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
+  .form-group input,.form-group select{width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:var(--card2);color:var(--text);font-size:14px;outline:none;transition:.2s}
+  .form-group input:focus{border-color:var(--accent)}
+  .btn-add{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;background:linear-gradient(135deg,var(--accent),#8b7cf7);color:#fff}
+  .btn-add:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(108,92,231,.35)}
+  .btn-add:active{transform:translateY(0)}
+
+  /* Presets */
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .preset{padding:6px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.08);background:var(--card2);color:var(--text2);font-size:12px;cursor:pointer;transition:.2s}
+  .preset:hover{border-color:var(--accent);color:var(--accent2)}
+
+  /* Charts */
+  .chart-card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:24px;border:1px solid rgba(255,255,255,.04)}
+  .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .chart-title{font-size:15px;font-weight:700}
+  .chart-tabs{display:flex;gap:4px}
+  .chart-tab{padding:6px 12px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;background:var(--card2);color:var(--text2)}
+  .chart-tab.active{background:var(--accent);color:#fff}
+  .chart-area{position:relative;height:200px;display:flex;align-items:flex-end;gap:6px;padding-bottom:28px}
+  .chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative}
+  .chart-bar{width:100%;border-radius:6px 6px 2px 2px;transition:all .4s ease;min-height:4px;position:relative;cursor:pointer}
+  .chart-bar.strength{background:linear-gradient(180deg,var(--accent),#8b7cf7)}
+  .chart-bar.cardio{background:linear-gradient(180deg,var(--green),#55efc4)}
+  .chart-bar:hover{filter:brightness(1.2)}
+  .chart-bar .tip{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--card2);color:var(--text);padding:3px 8px;border-radius:6px;font-size:11px;white-space:nowrap;opacity:0;transition:.2s;pointer-events:none}
+  .chart-bar:hover .tip{opacity:1}
+  .chart-label{font-size:10px;color:var(--text2);margin-top:8px;white-space:nowrap}
+  .chart-legend{display:flex;gap:16px;justify-content:center;margin-top:12px}
+  .chart-legend span{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)}
+  .chart-legend .dot{width:8px;height:8px;border-radius:50%}
+  .chart-legend .dot.s{background:var(--accent)}
+  .chart-legend .dot.c{background:var(--green)}
+  .chart-empty{height:180px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:13px}
+  .muscle-bar-row{display:flex;align-items:center;margin-bottom:10px;gap:10px}
+  .muscle-bar-label{width:56px;font-size:12px;color:var(--text2);text-align:right;flex-shrink:0}
+  .muscle-bar-track{flex:1;height:22px;background:var(--card2);border-radius:6px;overflow:hidden}
+  .muscle-bar-fill{height:100%;border-radius:6px;transition:width .5s ease;display:flex;align-items:center;padding-left:8px}
+  .muscle-bar-fill span{font-size:11px;font-weight:700;color:#fff;white-space:nowrap}
+
+  /* Records */
+  .section-title{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+  .record-group{margin-bottom:20px}
+  .record-group-title{font-size:13px;color:var(--accent2);font-weight:600;margin-bottom:8px;padding-left:4px}
+  .record-item{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,.04);transition:.2s}
+  .record-item:hover{border-color:rgba(108,92,231,.2)}
+  .record-info{flex:1}
+  .record-exercise{font-weight:700;font-size:15px;margin-bottom:4px}
+  .record-detail{font-size:13px;color:var(--text2)}
+  .record-detail span{color:var(--accent2);font-weight:600}
+  .record-time{font-size:11px;color:var(--text2);text-align:right;min-width:60px}
+  .btn-delete{background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;padding:4px 8px;border-radius:8px;margin-left:8px;opacity:.5;transition:.2s}
+  .btn-delete:hover{opacity:1;background:rgba(255,107,107,.1)}
+  .empty{text-align:center;padding:40px 20px;color:var(--text2)}
+  .empty .icon{font-size:48px;margin-bottom:12px}
+  .empty p{font-size:14px}
+  .btn-clear{background:none;border:1px solid rgba(255,107,107,.3);color:var(--danger);padding:8px 16px;border-radius:10px;font-size:12px;cursor:pointer;transition:.2s;margin-top:8px}
+  .btn-clear:hover{background:rgba(255,107,107,.1)}
+
+  /* Community tab */
+  .community-item{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:8px;border:1px solid rgba(255,255,255,.04)}
+  .community-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .community-name{font-weight:700;font-size:14px;color:var(--accent2)}
+  .community-time{font-size:11px;color:var(--text2)}
+  .community-body{font-size:13px;color:var(--text2)}
+  .community-body span{color:var(--accent2);font-weight:600}
+
+  /* Menu dropdown */
+  .menu-wrap{position:relative}
+  .menu-dropdown{position:absolute;top:44px;right:0;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:6px;min-width:140px;display:none;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .menu-dropdown.show{display:block}
+  .menu-item{padding:10px 14px;border-radius:8px;font-size:13px;color:var(--text);cursor:pointer;transition:.15s;display:flex;align-items:center;gap:8px}
+  .menu-item:hover{background:var(--card2)}
+  .menu-item.danger{color:var(--danger)}
+
+  /* Toast */
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:.3s;z-index:99;box-shadow:0 8px 24px rgba(0,184,148,.3)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.error{background:var(--danger)}
+
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--card2);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <h2>💪 <span>健身记录</span></h2>
+    <div class="auth-error" id="authError"></div>
+    <!-- Login -->
+    <div id="loginForm">
+      <div class="form-group"><label>用户名</label><input type="text" id="loginUser" placeholder="请输入用户名" autocomplete="username"></div>
+      <div class="form-group"><label>密码</label><input type="password" id="loginPass" placeholder="请输入密码" autocomplete="current-password"></div>
+      <button class="btn-primary" onclick="doLogin()">登 录</button>
+      <div class="auth-switch">没有账号？<a onclick="showRegister()">注册一个</a></div>
+    </div>
+    <!-- Register -->
+    <div id="registerForm" style="display:none">
+      <div class="form-group"><label>用户名</label><input type="text" id="regUser" placeholder="至少3个字符" autocomplete="username"></div>
+      <div class="form-group"><label>昵称</label><input type="text" id="regNick" placeholder="给自己取个名字"></div>
+      <div class="form-group"><label>密码</label><input type="password" id="regPass" placeholder="至少4个字符" autocomplete="new-password"></div>
+      <button class="btn-primary" onclick="doRegister()">注 册</button>
+      <div class="auth-switch">已有账号？<a onclick="showLogin()">去登录</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="appScreen" class="container" style="display:none">
+  <div class="header">
+    <div class="header-left"><h1>💪 <span>健身记录</span></h1></div>
+    <div class="header-right">
+      <span class="nickname" id="userNickname"></span>
+      <div class="menu-wrap">
+        <button class="btn-icon" onclick="toggleMenu()">☰</button>
+        <div class="menu-dropdown" id="menuDropdown">
+          <div class="menu-item" onclick="doExport()">📤 导出数据</div>
+          <div class="menu-item" onclick="doImport()">📥 导入数据</div>
+          <div class="menu-item" onclick="showCommunity()">👥 训练广场</div>
+          <div class="menu-item danger" onclick="doLogout()">🚪 退出登录</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card"><div class="num" id="totalCount">0</div><div class="label">总记录</div></div>
+    <div class="stat-card"><div class="num" id="weekCount">0</div><div class="label">本周训练</div></div>
+    <div class="stat-card"><div class="num" id="streakDays">0</div><div class="label">连续天数</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('strength')">🏋️ 力量</button>
+    <button class="tab" onclick="switchTab('cardio')">🏃 有氧</button>
+    <button class="tab" onclick="switchTab('community')">👥 广场</button>
+  </div>
+
+  <!-- Strength Form -->
+  <div class="form-card show" id="strengthForm">
+    <div class="presets" id="strengthPresets"></div>
+    <div class="form-row"><div class="form-group"><label>训练动作</label><input type="text" id="sExercise" placeholder="如：卧推" autocomplete="off"></div></div>
+    <div class="form-row">
+      <div class="form-group"><label>重量 (kg)</label><input type="number" id="sWeight" placeholder="60" min="0" step="0.5"></div>
+      <div class="form-group"><label>组数</label><input type="number" id="sSets" placeholder="4" min="1"></div>
+      <div class="form-group"><label>次数</label><input type="number" id="sReps" placeholder="10" min="1"></div>
+    </div>
+    <button class="btn-add" onclick="addStrength()">✦ 记录力量训练</button>
+  </div>
+
+  <!-- Cardio Form -->
+  <div class="form-card" id="cardioForm">
+    <div class="presets" id="cardioPresets"></div>
+    <div class="form-row"><div class="form-group"><label>有氧项目</label><input type="text" id="cExercise" placeholder="如：跑步" autocomplete="off"></div></div>
+    <div class="form-row">
+      <div class="form-group"><label>时长 (分钟)</label><input type="number" id="cDuration" placeholder="30" min="1"></div>
+      <div class="form-group"><label>距离 (km)</label><input type="number" id="cDistance" placeholder="5" min="0" step="0.1"></div>
+      <div class="form-group"><label>卡路里 (kcal)</label><input type="number" id="cCalories" placeholder="300" min="0"></div>
+    </div>
+    <button class="btn-add" onclick="addCardio()">✦ 记录有氧训练</button>
+  </div>
+
+  <!-- Community -->
+  <div class="form-card" id="communityPanel">
+    <div class="section-title">👥 今日训练动态</div>
+    <div id="communityList"></div>
+  </div>
+
+  <!-- Charts -->
+  <div id="chartsSection">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">📊 训练趋势</div>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchChart('week')">近7天</button>
+          <button class="chart-tab" onclick="switchChart('month')">近30天</button>
+        </div>
+      </div>
+      <div class="chart-area" id="trendChart"></div>
+      <div class="chart-legend"><span><span class="dot s"></span>力量 (组)</span><span><span class="dot c"></span>有氧 (分钟)</span></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">💪 肌肉部位分布</div></div>
+      <div id="muscleChart"></div>
+    </div>
+  </div>
+
+  <!-- Records -->
+  <div id="recordsSection">
+    <div class="section-title">📋 训练记录</div>
+    <div id="recordsList"></div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let token = localStorage.getItem('fitnessToken');
+let currentUser = null;
+let records = [];
+let currentTab = 'strength';
+let chartMode = 'week';
+
+const PRESETS = {
+  strength: ['卧推','深蹲','硬拉','引体向上','肩推','划船','弯举','三头下压','腿举','哑铃飞鸟'],
+  cardio: ['跑步','游泳','骑行','跳绳','椭圆机','划船机','快走','HIIT']
+};
+const MUSCLE_MAP = {
+  '卧推':'胸','哑铃飞鸟':'胸','俯卧撑':'胸','龙门架夹胸':'胸',
+  '深蹲':'腿','腿举':'腿','腿屈伸':'腿','腿弯举':'腿','箭步蹲':'腿',
+  '硬拉':'背','引体向上':'背','划船':'背','高位下拉':'背','坐姿划船':'背',
+  '肩推':'肩','侧平举':'肩','前平举':'肩','面拉':'肩',
+  '弯举':'手臂','三头下压':'手臂','锤式弯举':'手臂','臂屈伸':'手臂',
+};
+
+// --- API Helper ---
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, { ...opts, headers });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || '请求失败');
+  return data;
+}
+
+// --- Toast ---
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 2200);
+}
+
+// --- Auth ---
+function showLogin() {
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('authError').style.display = 'none';
+}
+function showRegister() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('authError').style.display = 'none';
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  try {
+    const data = await api('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    token = data.token; currentUser = data.user;
+    localStorage.setItem('fitnessToken', token);
+    enterApp();
+  } catch (e) { showAuthError(e.message); }
+}
+
+async function doRegister() {
+  const username = document.getElementById('regUser').value.trim();
+  const nickname = document.getElementById('regNick').value.trim();
+  const password = document.getElementById('regPass').value;
+  try {
+    const data = await api('/api/register', { method: 'POST', body: JSON.stringify({ username, password, nickname }) });
+    token = data.token; currentUser = data.user;
+    localStorage.setItem('fitnessToken', token);
+    enterApp();
+  } catch (e) { showAuthError(e.message); }
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function doLogout() {
+  token = null; currentUser = null; records = [];
+  localStorage.removeItem('fitnessToken');
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('appScreen').style.display = 'none';
+  closeMenu();
+}
+
+async function enterApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('userNickname').textContent = currentUser.nickname;
+  await loadRecords();
+  renderPresets();
+}
+
+// --- Data ---
+async function loadRecords() {
+  try {
+    records = await api('/api/records');
+    records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    render();
+  } catch (e) {
+    if (e.message.includes('登录') || e.message.includes('过期')) doLogout();
+    else showToast(e.message, true);
+  }
+}
+
+function renderPresets() {
+  document.getElementById('strengthPresets').innerHTML = PRESETS.strength.map(p => `<span class="preset" onclick="fillExercise('sExercise','${p}')">${p}</span>`).join('');
+  document.getElementById('cardioPresets').innerHTML = PRESETS.cardio.map(p => `<span class="preset" onclick="fillExercise('cExercise','${p}')">${p}</span>`).join('');
+}
+
+function fillExercise(id, val) { document.getElementById(id).value = val; }
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i === 0 && tab === 'strength') || (i === 1 && tab === 'cardio') || (i === 2 && tab === 'community')));
+  document.getElementById('strengthForm').classList.toggle('show', tab === 'strength');
+  document.getElementById('cardioForm').classList.toggle('show', tab === 'cardio');
+  document.getElementById('communityPanel').classList.toggle('show', tab === 'community');
+  document.getElementById('chartsSection').style.display = tab === 'community' ? 'none' : 'block';
+  document.getElementById('recordsSection').style.display = tab === 'community' ? 'none' : 'block';
+  if (tab === 'community') loadCommunity();
+}
+
+function toggleMenu() { document.getElementById('menuDropdown').classList.toggle('show'); }
+function closeMenu() { document.getElementById('menuDropdown').classList.remove('show'); }
+document.addEventListener('click', e => { if (!e.target.closest('.menu-wrap')) closeMenu(); });
+
+// --- Add Records ---
+async function addStrength() {
+  const exercise = document.getElementById('sExercise').value.trim();
+  const weight = parseFloat(document.getElementById('sWeight').value);
+  const sets = parseInt(document.getElementById('sSets').value);
+  const reps = parseInt(document.getElementById('sReps').value);
+  if (!exercise || !weight || !sets || !reps) return showToast('⚠️ 请填写完整信息', true);
+  try {
+    await api('/api/records', { method: 'POST', body: JSON.stringify({ type: 'strength', exercise, weight, sets, reps }) });
+    showToast('✅ 记录成功！');
+    ['sExercise','sWeight','sSets','sReps'].forEach(id => document.getElementById(id).value = '');
+    await loadRecords();
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function addCardio() {
+  const exercise = document.getElementById('cExercise').value.trim();
+  const duration = parseInt(document.getElementById('cDuration').value);
+  const distance = parseFloat(document.getElementById('cDistance').value) || 0;
+  const calories = parseInt(document.getElementById('cCalories').value) || 0;
+  if (!exercise || !duration) return showToast('⚠️ 请填写项目和时长', true);
+  try {
+    await api('/api/records', { method: 'POST', body: JSON.stringify({ type: 'cardio', exercise, duration, distance, calories }) });
+    showToast('✅ 记录成功！');
+    ['cExercise','cDuration','cDistance','cCalories'].forEach(id => document.getElementById(id).value = '');
+    await loadRecords();
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function deleteRecord(id) {
+  try {
+    await api('/api/records/' + id, { method: 'DELETE' });
+    showToast('🗑️ 已删除');
+    await loadRecords();
+  } catch (e) { showToast(e.message, true); }
+}
+
+async function clearAll() {
+  if (!confirm('确定清空所有记录？')) return;
+  try {
+    await api('/api/records', { method: 'DELETE' });
+    showToast('🧹 已清空');
+    await loadRecords();
+  } catch (e) { showToast(e.message, true); }
+}
+
+// --- Export / Import ---
+function doExport() {
+  closeMenu();
+  const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fitness-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  showToast('📤 已导出');
+}
+
+function doImport() {
+  closeMenu();
+  document.getElementById('importFile').click();
+}
+
+async function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!Array.isArray(data)) throw new Error('格式错误');
+    const result = await api('/api/import', { method: 'POST', body: JSON.stringify({ records: data }) });
+    showToast(`📥 已导入 ${result.count} 条记录`);
+    await loadRecords();
+  } catch (e) { showToast('导入失败: ' + e.message, true); }
+  e.target.value = '';
+}
+
+// --- Community ---
+async function showCommunity() {
+  closeMenu();
+  switchTab('community');
+}
+
+async function loadCommunity() {
+  try {
+    const data = await api('/api/community');
+    const list = document.getElementById('communityList');
+    if (!data.length) {
+      list.innerHTML = '<div class="empty"><div class="icon">👥</div><p>今天还没有人训练<br>做第一个打卡的人！</p></div>';
+      return;
+    }
+    list.innerHTML = data.map(r => {
+      const t = new Date(r.createdAt);
+      const time = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+      let detail = '';
+      if (r.type === 'strength') detail = `🏋️ ${r.exercise} · <span>${r.weight}</span>kg × <span>${r.sets}</span>组 × <span>${r.reps}</span>次`;
+      else detail = `🏃 ${r.exercise} · <span>${r.duration}</span>分钟${r.distance ? ' · <span>'+r.distance+'</span>km' : ''}`;
+      return `<div class="community-item">
+        <div class="community-header"><span class="community-name">${r.nickname}</span><span class="community-time">${time}</span></div>
+        <div class="community-body">${detail}</div>
+      </div>`;
+    }).join('');
+  } catch (e) { showToast(e.message, true); }
+}
+
+// --- Charts ---
+function renderTrendChart() {
+  const container = document.getElementById('trendChart');
+  const days = chartMode === 'week' ? 7 : 30;
+  const data = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    const dateStr = d.toDateString();
+    const dayRecs = records.filter(r => new Date(r.createdAt).toDateString() === dateStr);
+    const strengthSets = dayRecs.filter(r => r.type === 'strength').reduce((s, r) => s + (r.sets || 0), 0);
+    const cardioMins = dayRecs.filter(r => r.type === 'cardio').reduce((s, r) => s + (r.duration || 0), 0);
+    const label = days <= 7 ? ['日','一','二','三','四','五','六'][d.getDay()] : `${d.getMonth()+1}/${d.getDate()}`;
+    data.push({ label, strengthSets, cardioMins });
+  }
+  const maxVal = Math.max(...data.map(d => Math.max(d.strengthSets, d.cardioMins)), 1);
+  if (data.every(d => d.strengthSets === 0 && d.cardioMins === 0)) {
+    container.innerHTML = '<div class="chart-empty">📉 还没有训练数据</div>'; return;
+  }
+  container.innerHTML = data.map(d => {
+    const sH = d.strengthSets ? Math.max((d.strengthSets / maxVal) * 100, 4) : 0;
+    const cH = d.cardioMins ? Math.max((d.cardioMins / maxVal) * 100, 4) : 0;
+    return `<div class="chart-bar-wrap"><div style="display:flex;gap:3px;width:100%;align-items:flex-end;flex:1">
+      <div class="chart-bar strength" style="height:${sH}%;flex:1"><span class="tip">${d.strengthSets}组</span></div>
+      <div class="chart-bar cardio" style="height:${cH}%;flex:1"><span class="tip">${d.cardioMins}分</span></div>
+    </div><div class="chart-label">${d.label}</div></div>`;
+  }).join('');
+}
+
+function renderMuscleChart() {
+  const container = document.getElementById('muscleChart');
+  const strengthRecords = records.filter(r => r.type === 'strength');
+  if (!strengthRecords.length) { container.innerHTML = '<div class="chart-empty">🏋️ 还没有力量训练记录</div>'; return; }
+  const counts = {};
+  strengthRecords.forEach(r => { const g = MUSCLE_MAP[r.exercise] || '其他'; counts[g] = (counts[g] || 0) + (r.sets || 1); });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const max = sorted[0][1];
+  const colors = ['#6c5ce7','#a29bfe','#00b894','#55efc4','#fdcb6e','#e17055','#fd79a8','#74b9ff'];
+  container.innerHTML = sorted.map(([name, count], i) => {
+    const pct = (count / max) * 100;
+    const color = colors[i % colors.length];
+    return `<div class="muscle-bar-row"><div class="muscle-bar-label">${name}</div><div class="muscle-bar-track"><div class="muscle-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${color},${color}aa)"><span>${count}组</span></div></div><div class="muscle-bar-count">${count}</div></div>`;
+  }).join('');
+}
+
+function switchChart(mode) {
+  chartMode = mode;
+  document.querySelectorAll('.chart-tab').forEach((t, i) => t.classList.toggle('active', (i === 0 && mode === 'week') || (i === 1 && mode === 'month')));
+  renderTrendChart();
+}
+
+// --- Render All ---
+function render() {
+  document.getElementById('totalCount').textContent = records.length;
+  const weekAgo = Date.now() - 7 * 86400000;
+  document.getElementById('weekCount').textContent = records.filter(r => new Date(r.createdAt).getTime() >= weekAgo).length;
+  // Streak
+  if (records.length) {
+    const days = [...new Set(records.map(r => new Date(r.createdAt).toDateString()))];
+    let streak = 1;
+    for (let i = 0; i < days.length - 1; i++) { if ((new Date(days[i]) - new Date(days[i+1])) / 86400000 <= 1.5) streak++; else break; }
+    document.getElementById('streakDays').textContent = streak;
+  } else { document.getElementById('streakDays').textContent = 0; }
+
+  renderTrendChart();
+  renderMuscleChart();
+
+  const list = document.getElementById('recordsList');
+  if (!records.length) {
+    list.innerHTML = '<div class="empty"><div class="icon">🏋️</div><p>还没有训练记录<br>开始你的第一次训练吧！</p></div>'; return;
+  }
+  const groups = {};
+  records.forEach(r => {
+    const d = new Date(r.createdAt);
+    const today = new Date(), yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    let key = `${d.getMonth()+1}/${d.getDate()}`;
+    if (d.toDateString() === today.toDateString()) key = '今天';
+    else if (d.toDateString() === yesterday.toDateString()) key = '昨天';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+
+  let html = '';
+  for (const [date, items] of Object.entries(groups)) {
+    html += `<div class="record-group"><div class="record-group-title">${date}</div>`;
+    items.forEach(r => {
+      const t = new Date(r.createdAt);
+      const time = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+      if (r.type === 'strength') {
+        html += `<div class="record-item"><div class="record-info"><div class="record-exercise">🏋️ ${r.exercise}</div><div class="record-detail"><span>${r.weight}</span> kg × <span>${r.sets}</span> 组 × <span>${r.reps}</span> 次</div></div><div class="record-time">${time}</div><button class="btn-delete" onclick="deleteRecord('${r.id}')">×</button></div>`;
+      } else {
+        const parts = [];
+        if (r.duration) parts.push(`<span>${r.duration}</span> 分钟`);
+        if (r.distance) parts.push(`<span>${r.distance}</span> km`);
+        if (r.calories) parts.push(`<span>${r.calories}</span> kcal`);
+        html += `<div class="record-item"><div class="record-info"><div class="record-exercise">🏃 ${r.exercise}</div><div class="record-detail">${parts.join(' · ')}</div></div><div class="record-time">${time}</div><button class="btn-delete" onclick="deleteRecord('${r.id}')">×</button></div>`;
+      }
+    });
+    html += '</div>';
+  }
+  html += '<div style="text-align:center;margin-top:16px"><button class="btn-clear" onclick="clearAll()">🗑️ 清空所有记录</button></div>';
+  list.innerHTML = html;
+}
+
+// --- Init ---
+(async function init() {
+  if (token) {
+    try {
+      const data = await api('/api/login/verify');
+      currentUser = data.user;
+      enterApp();
+    } catch {
+      // Try to get user info from token
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        currentUser = { id: payload.id, username: payload.username, nickname: payload.nickname };
+        enterApp();
+      } catch { doLogout(); }
+    }
+  }
+})();
+</script>
+</body>
+</html>
